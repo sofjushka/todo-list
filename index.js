@@ -59,7 +59,7 @@ class AddTask extends Component {
         this.currentInputValue = '';
     }
 
-    onInputChange = (event) => {
+    onAddInputChange = (event) => {
         this.currentInputValue = event.target.value;
     };
 
@@ -68,6 +68,7 @@ class AddTask extends Component {
         if (text !== '') {
             this.onAdd(text);
             this.currentInputValue = '';
+            this.update();
         }
     };
 
@@ -78,14 +79,14 @@ class AddTask extends Component {
             placeholder: "Задание",
             value: this.currentInputValue,
         }, null, {
-            input: this.onInputChange
+            input: this.onAddInputChange
         });
 
-        const buttonElement = createElement("button", { id: "add-btn" }, "+", {
+        const buttonElement = createElement("button", {id: "add-btn"}, "+", {
             click: this.onAddTask
         });
 
-        return createElement("div", { class: "add-todo" }, [
+        return createElement("div", {class: "add-todo"}, [
             inputElement,
             buttonElement
         ]);
@@ -93,21 +94,44 @@ class AddTask extends Component {
 }
 
 class Task extends Component {
-    constructor(todo, onDelete) {
+    constructor(todo, onDelete, onToggle) {
         super();
         this.todo = todo;
         this.onDelete = onDelete;
+        this.onToggle = onToggle;
+
+        this.state = {
+            isDeleteConfirmed: false
+        };
     }
 
+    handleDeleteClick = () => {
+        if (!this.state.isDeleteConfirmed) {
+            this.state.isDeleteConfirmed = true;
+            this.update();
+        } else {
+            this.onDelete(this.todo.id);
+        }
+    };
+
+    handleToggleChange = () => {
+        this.onToggle(this.todo.id);
+    };
+
     render() {
-        return createElement("li", {}, [
+        const liClass = this.todo.completed ? "completed" : "";
+        const btnClass = "delete-btn" + (this.state.isDeleteConfirmed ? " confirm" : "");
+
+        return createElement("li", {class: liClass}, [
             createElement("input", {
                 type: "checkbox",
                 checked: this.todo.completed
+            }, null, {
+                change: this.handleToggleChange
             }),
             createElement("label", {}, this.todo.text),
-            createElement("button", {}, "🗑️", {
-                click: () => this.onDelete(this.todo.id)
+            createElement("button", {class: btnClass}, "🗑️", {
+                click: this.handleDeleteClick
             })
         ]);
     }
@@ -118,9 +142,9 @@ class TodoList extends Component {
         super();
         this.state = {
             todos: [
-                { id: 1, text: 'Сделать домашку', completed: false },
-                { id: 2, text: 'Сделать практику', completed: false },
-                { id: 3, text: 'Пойти домой', completed: false },
+                {id: 1, text: 'Сделать домашку', completed: false},
+                {id: 2, text: 'Сделать практику', completed: false},
+                {id: 3, text: 'Пойти домой', completed: false},
             ],
         };
 
@@ -137,6 +161,14 @@ class TodoList extends Component {
         this.update();
     };
 
+    onToggle = (id) => {
+        const todo = this.state.todos.find(t => t.id === id);
+        if (todo) {
+            todo.completed = !todo.completed;
+            this.update();
+        }
+    };
+
     onDelete = (id) => {
         this.state.todos = this.state.todos.filter(t => t.id !== id);
         this.update();
@@ -144,14 +176,14 @@ class TodoList extends Component {
 
     render() {
         const taskElements = this.state.todos.map(todo => {
-            const task = new Task(todo, this.onDelete);
+            const task = new Task(todo, this.onDelete, this.onToggle);
             return task.getDomNode();
         });
 
-        return createElement("div", { class: "todo-list" }, [
+        return createElement("div", {class: "todo-list"}, [
             createElement("h1", {}, "TODO List"),
             this.addTaskComponent.getDomNode(),
-            createElement("ul", { id: "todos" }, taskElements),
+            createElement("ul", {id: "todos"}, taskElements),
         ]);
     }
 }
