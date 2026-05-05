@@ -63,3 +63,8 @@ button {
 .todo-list li.completed label {
     color: #888;
 }
+
+.delete-btn.confirm {
+    background-color: #ff0000; 
+    color: white;
+}
