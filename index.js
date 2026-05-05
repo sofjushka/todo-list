@@ -140,16 +140,26 @@ class Task extends Component {
 class TodoList extends Component {
     constructor() {
         super();
+
+        const savedTodos = localStorage.getItem('todos');
+        const initialTodos = savedTodos
+            ? JSON.parse(savedTodos)
+            : [
+                { id: 1, text: 'Сделать домашку', completed: false },
+                { id: 2, text: 'Сделать практику', completed: false },
+                { id: 3, text: 'Пойти домой', completed: false },
+            ];
+
         this.state = {
-            todos: [
-                {id: 1, text: 'Сделать домашку', completed: false},
-                {id: 2, text: 'Сделать практику', completed: false},
-                {id: 3, text: 'Пойти домой', completed: false},
-            ],
+            todos: initialTodos,
         };
 
         this.addTaskComponent = new AddTask(this.onAdd);
     }
+
+    saveToLocalStorage = () => {
+        localStorage.setItem('todos', JSON.stringify(this.state.todos));
+    };
 
     onAdd = (text) => {
         const newTodo = {
@@ -158,6 +168,7 @@ class TodoList extends Component {
             completed: false,
         };
         this.state.todos.push(newTodo);
+        this.saveToLocalStorage();
         this.update();
     };
 
@@ -165,12 +176,14 @@ class TodoList extends Component {
         const todo = this.state.todos.find(t => t.id === id);
         if (todo) {
             todo.completed = !todo.completed;
+            this.saveToLocalStorage();
             this.update();
         }
     };
 
     onDelete = (id) => {
         this.state.todos = this.state.todos.filter(t => t.id !== id);
+        this.saveToLocalStorage();
         this.update();
     };
 
@@ -180,10 +193,10 @@ class TodoList extends Component {
             return task.getDomNode();
         });
 
-        return createElement("div", {class: "todo-list"}, [
+        return createElement("div", { class: "todo-list" }, [
             createElement("h1", {}, "TODO List"),
             this.addTaskComponent.getDomNode(),
-            createElement("ul", {id: "todos"}, taskElements),
+            createElement("ul", { id: "todos" }, taskElements),
         ]);
     }
 }
