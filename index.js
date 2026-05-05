@@ -52,6 +52,67 @@ class Component {
     }
 }
 
+class AddTask extends Component {
+    constructor(onAdd) {
+        super();
+        this.onAdd = onAdd;
+        this.currentInputValue = '';
+    }
+
+    onInputChange = (event) => {
+        this.currentInputValue = event.target.value;
+    };
+
+    onAddTask = () => {
+        const text = this.currentInputValue.trim();
+        if (text !== '') {
+            this.onAdd(text);
+            this.currentInputValue = '';
+        }
+    };
+
+    render() {
+        const inputElement = createElement("input", {
+            id: "new-todo",
+            type: "text",
+            placeholder: "Задание",
+            value: this.currentInputValue,
+        }, null, {
+            input: this.onInputChange
+        });
+
+        const buttonElement = createElement("button", { id: "add-btn" }, "+", {
+            click: this.onAddTask
+        });
+
+        return createElement("div", { class: "add-todo" }, [
+            inputElement,
+            buttonElement
+        ]);
+    }
+}
+
+class Task extends Component {
+    constructor(todo, onDelete) {
+        super();
+        this.todo = todo;
+        this.onDelete = onDelete;
+    }
+
+    render() {
+        return createElement("li", {}, [
+            createElement("input", {
+                type: "checkbox",
+                checked: this.todo.completed
+            }),
+            createElement("label", {}, this.todo.text),
+            createElement("button", {}, "🗑️", {
+                click: () => this.onDelete(this.todo.id)
+            })
+        ]);
+    }
+}
+
 class TodoList extends Component {
     constructor() {
         super();
@@ -63,64 +124,38 @@ class TodoList extends Component {
             ],
         };
 
-        this.currentInputValue = '';
+        this.addTaskComponent = new AddTask(this.onAdd);
     }
 
-    onAddInputChange = (event) => {
-        this.currentInputValue = event.target.value;
+    onAdd = (text) => {
+        const newTodo = {
+            id: Date.now(),
+            text: text,
+            completed: false,
+        };
+        this.state.todos.push(newTodo);
+        this.update();
     };
 
-    onAddTask = () => {
-        const text = this.currentInputValue.trim();
-
-        if (text !== '') {
-            const newTodo = {
-                id: Date.now(),
-                text: text,
-                completed: false,
-            };
-
-            this.state.todos.push(newTodo);
-            this.currentInputValue = '';
-            this.update();
-        }
+    onDelete = (id) => {
+        this.state.todos = this.state.todos.filter(t => t.id !== id);
+        this.update();
     };
 
     render() {
-        const todoItems = this.state.todos.map(todo => {
-            return createElement("li", {}, [
-                createElement("input", {
-                    type: "checkbox",
-                    checked: todo.completed
-                }),
-                createElement("label", {}, todo.text),
-                createElement("button", {}, "🗑️")
-            ]);
-        });
-
-        const inputElement = createElement("input", {
-            id: "new-todo",
-            type: "text",
-            placeholder: "Задание",
-            value: this.currentInputValue,
-        }, null, {
-            input: this.onAddInputChange
-        });
-
-        const buttonElement = createElement("button", { id: "add-btn" }, "+", {
-            click: this.onAddTask
+        const taskElements = this.state.todos.map(todo => {
+            const task = new Task(todo, this.onDelete);
+            return task.getDomNode();
         });
 
         return createElement("div", { class: "todo-list" }, [
             createElement("h1", {}, "TODO List"),
-            createElement("div", { class: "add-todo" }, [
-                inputElement,
-                buttonElement
-            ]),
-            createElement("ul", { id: "todos" }, todoItems),
+            this.addTaskComponent.getDomNode(),
+            createElement("ul", { id: "todos" }, taskElements),
         ]);
     }
 }
+
 document.addEventListener("DOMContentLoaded", () => {
-  document.body.appendChild(new TodoList().getDomNode());
+    document.body.appendChild(new TodoList().getDomNode());
 });
