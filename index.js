@@ -26,11 +26,20 @@
 
 class Component {
   constructor() {
+    this._domNode = null;
   }
 
   getDomNode() {
     this._domNode = this.render();
     return this._domNode;
+  }
+
+  update() {
+  if(this._domNode){
+    const newNode = this.render();
+    this._domNode.replaceWith(newNode);
+    this._domNode = newNode;
+  }
   }
 }
 
