@@ -86,15 +86,39 @@ class TodoList extends Component {
         }
     };
 
+     onToggleTask = (id) => {
+        const todo = this.state.todos.find(t => t.id === id);
+        if (todo) {
+            todo.completed = !todo.completed;
+            this.update();
+        }
+    };
+
+    onDeleteTask = (id) => {
+        this.state.todos = this.state.todos.filter(t => t.id !== id);
+        this.update();
+    };
+
     render() {
         const todoItems = this.state.todos.map(todo => {
-            return createElement("li", {}, [
-                createElement("input", {
-                    type: "checkbox",
-                    checked: todo.completed
-                }),
-                createElement("label", {}, todo.text),
-                createElement("button", {}, "🗑️")
+            const checkbox = createElement("input", {
+                type: "checkbox",
+                checked: todo.completed
+            }, null, {
+                change: () => this.onToggleTask(todo.id)
+            });
+
+            const label = createElement("label", {}, todo.text);
+            const deleteBtn = createElement("button", { class: "delete-btn" }, "🗑️", {
+                click: () => this.onDeleteTask(todo.id)
+            });
+
+            const liClass = todo.completed ? "completed" : "";
+
+            return createElement("li", { class: liClass }, [
+                checkbox,
+                label,
+                deleteBtn
             ]);
         });
 
